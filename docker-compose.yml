@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: nlsql_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app_admin
+      POSTGRES_PASSWORD: app_admin_pw
+      POSTGRES_DB: analytics
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/app/db/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_admin -d analytics"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: nlsql_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://analytics_readonly:readonly_pw@db:5432/analytics
+      ADMIN_DATABASE_URL: postgresql+psycopg2://app_admin:app_admin_pw@db:5432/analytics
+      LLM_PROVIDER: gemini
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      MAX_SQL_REPAIR_ATTEMPTS: 3
+      MAX_ROW_LIMIT: 500
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: nlsql_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
