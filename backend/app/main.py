@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.services.seed_service import run_seed        
 from app.api.routes import router
 
 app = FastAPI(

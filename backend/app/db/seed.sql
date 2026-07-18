@@ -72,16 +72,4 @@ JOIN LATERAL (SELECT (random() * 9 + 1)::INT AS product_id) pi ON true
 JOIN products p ON p.product_id = pi.product_id
 JOIN LATERAL (SELECT (random() * 4 + 1)::INT AS qty) q ON true;
 
--- ---------- Read-only role for the agent ----------
-DO $$
-BEGIN
-   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'analytics_readonly') THEN
-      CREATE ROLE analytics_readonly LOGIN PASSWORD 'readonly_pw';
-   END IF;
-END
-$$;
 
-GRANT CONNECT ON DATABASE analytics TO analytics_readonly;
-GRANT USAGE ON SCHEMA public TO analytics_readonly;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO analytics_readonly;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO analytics_readonly;

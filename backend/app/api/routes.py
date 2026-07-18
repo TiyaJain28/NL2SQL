@@ -5,7 +5,7 @@ from app.models import QueryRequest, QueryResponse
 from app.agent.graph import agent_app
 from app.agent.memory import new_conversation_id, get_history, append_turn
 from app.config import settings
-
+from app.services.seed_service import run_seed    
 router = APIRouter()
 
 
